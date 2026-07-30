@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  O.A.S.I.S. sitemap.
+
+  The whole system is one page: everything below the root is a hash route,
+  and search engines do not index fragments separately. So there is exactly
+  one URL here, and there should stay exactly one.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://oasis.labidi.eu/</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
