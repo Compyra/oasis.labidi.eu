@@ -62,14 +62,18 @@ working with the cable cut. <https://oasis.labidi.eu>
   round-trip closes < 1.5 mm; MGRS of 0°,0° = `31N AA 66021 00000`
 - Resection closes to 0.000 mm across 8 geometries including the dateline and
   both polar regions
-- **Zero external requests** — a full session loads exactly 7 same-origin files
-  and nothing else, measured from the network log
-- All 23 tools × 7 adversarial input sets (empty, zero, negative, 1e21, garbage,
+- **Zero external requests** — a full cold load is exactly 9 same-origin files
+  (the document, one stylesheet, seven scripts) and nothing else, measured from
+  the resource timing log
+- All 24 tools × 7 adversarial input sets (empty, zero, negative, 1e21, garbage,
   whitespace) produce no NaN, no Infinity and no exception
 - Structural audit passes: no duplicate ids, every table row matches its column
   count, every chapter/tool/table cross-reference resolves, all `**` balanced,
-  every select default is a real option, every source link is https
-- No horizontal scroll from 320 px to 1440 px; zero console errors on all 16 routes
+  every select default is a real option, every source link is https, every
+  decision-tree branch resolves to a real node with no loops and no orphans,
+  every cited source key exists and every defined source is cited
+- No horizontal scroll from 320 px to 1440 px; zero console errors across all 69
+  routes (every chapter, playbook, decision guide and standalone page)
 
 ### Fixed in the post-build audit
 
@@ -93,6 +97,13 @@ working with the cable cut. <https://oasis.labidi.eu>
 - `aria-live` on tool output re-announced the entire result on every keystroke
 - Canvas kept stale theme colours after a theme switch
 
+### Fixed in the final sweep
+
+- Reference tables rendered no citations at all — `renderTable` ignored a
+  `sources` field, so the alerting table made country-by-country claims with
+  nothing behind them. Tables now carry source chips like every other block,
+  and the alerting table cites NCCN, FEMA, NOAA and the ITU.
+
 ## Next
 
 - [ ] **Offline map tiles** for a user-chosen region — the one genuine gap. The
@@ -102,7 +113,7 @@ working with the cable cut. <https://oasis.labidi.eu>
 - [ ] Ship a reduced WMM/IGRF coefficient set so declination needs no observation
       (the solar method now covers it, but a model would work at night)
 - [ ] GPX **import** (export is done)
-- [ ] Translations — NL/FR first, to match the rest of rami.party
+- [ ] Translations — NL and FR first, to match the other labidi.eu projects
 - [ ] Satellite pass prediction from stored TLEs (SGP4 is ~200 lines)
 - [ ] Share a waypoint set or the emergency card as a QR code, device to device,
       with no network (needs a QR encoder, ~200 lines)
@@ -111,21 +122,19 @@ working with the cable cut. <https://oasis.labidi.eu>
 - [ ] More decision guides: chest pain, breathlessness, abdominal pain, fever
 - [ ] Playbook: dam failure, train derailment, sinkhole, mass gathering crush
 
-## Migration to oasis.labidi.eu — done
+## Standing alone
 
-Moved out of `rami.party/workshop/OASIS/` and onto its own domain.
+This project is self-contained and origin-agnostic: every internal link is
+relative and every asset is local, so the folder runs from its own domain, from
+any sub-path, or straight off a USB stick over `file://`. All environment-specific
+values live in the `CONFIG` block at the top of `app.js` — contact address, the
+site it belongs to, and the link back to it.
 
-- [x] Files copied to the repository root; `CNAME`, `robots.txt`, `sitemap.xml`,
-      `404.html` and `README.md` added
-- [x] Canonical URL, manifest `id`/scope and the parent-site chip repointed
-- [x] Service worker cache bumped so installed copies pick up the change
-- [x] A redirect left at the old `/workshop/OASIS/` address, preserving the hash
-      route — an old bookmark to `#/c/medical/bleeding` still lands on that card
-- [x] rami.party's realm registry and sitemap updated to the external address
-
-The code stays origin-agnostic: every internal link is relative and every asset
-is local, so the folder runs from any domain, any sub-path, or `file://`. All
-environment-specific values live in the `CONFIG` block at the top of `app.js`.
+If it ever has to move again: copy the folder, edit `CONFIG`, update the
+`canonical` link and `CNAME`, bump `CACHE` in `sw.js`, and leave a redirect plus
+a tombstone service worker behind. The tombstone matters — without it a
+cache-first worker keeps serving the old copy out of visitors' own storage and
+they never see the redirect at all.
 
 ## Content backlog
 

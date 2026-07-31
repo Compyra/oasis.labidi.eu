@@ -273,6 +273,9 @@
             });
             filter.placeholder = `Filter ${shown} of ${tbl.rows.length} rows…`;
         });
+
+        const src = sourceChips(tbl.sources);
+        if (src) wrap.appendChild(src);
         return wrap;
     }
 

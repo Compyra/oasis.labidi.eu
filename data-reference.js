@@ -178,6 +178,7 @@ window.OASIS_TABLES = [
             ['Global — any radio', 'National broadcaster on AM/FM', 'Battery or wind-up radio', 'Own one. It is the last channel standing'],
             ['Global — outside view', 'Shortwave broadcast', 'HF receiver', 'Useful when domestic sources are unreliable'],
         ],
+        sources: ['nccn', 'fema', 'noaa', 'itu'],
     },
     {
         id: 'net-schedule',
