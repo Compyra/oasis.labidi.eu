@@ -31,8 +31,8 @@ working with the cable cut. <https://oasis.labidi.eu>
 
 ## Built
 
-- [x] 12 chapters, 93 cards, **42 playbooks**, **6 decision guides**, 21 tables,
-      24 calculators, 43 named source authorities
+- [x] 12 chapters, 94 cards, **42 playbooks**, **6 decision guides**, 26 tables,
+      24 calculators, 52 named source authorities
 - [x] **`#/now` — "I need help now"**: 13 one-tap critical links plus interactive
       decision guides for unknown situation, casualty, navigation, meeting people,
       water safety and stay-or-go
@@ -50,6 +50,13 @@ working with the cable cut. <https://oasis.labidi.eu>
       crystal radio, master table of 38 channels, global alerting table with BE-Alert
 - [x] **Position page** (`#/pos`, or tap the status chip): all formats, copy, log,
       save waypoints, GPX export, and a locally drawn range-ring map
+- [x] **Stockpiling, sourced against the national authorities**: what to keep in
+      stock, how long for, and the fact that the authorities openly disagree —
+      the EU floor of 72 h against Sweden and Norway's week and Germany's ten
+      days, presented side by side rather than averaged into a single invented
+      number. Includes Germany's quantified 10-day per-person food table, the
+      EPA bleach dose table, the 4 h / 48 h / 24 h power-cut food rules with the
+      measured refreeze test, and the FDA potassium-iodide schedule by age
 - [x] **Emergency card** (`#/card`): fillable, printable, stored only on the device
 - [x] Install: `beforeinstallprompt` captured, status-bar button, install card with
       per-platform manual steps and installed-state detection
@@ -103,6 +110,29 @@ working with the cable cut. <https://oasis.labidi.eu>
   `sources` field, so the alerting table made country-by-country claims with
   nothing behind them. Tables now carry source chips like every other block,
   and the alerting table cites NCCN, FEMA, NOAA and the ITU.
+
+### Fixed in the findability sweep
+
+All three were found by searching the way a member of the public would, rather
+than the way the author does.
+
+- **Natural questions returned a blank page.** Search demanded every word appear
+  in the same entry, so "what should I buy" and "shopping list" found nothing at
+  all. A failed strict pass now falls back to a relaxed one ranked by how much
+  of the question was covered. Queries that already worked are untouched — the
+  fallback only ever runs when the result would otherwise be empty.
+- **Typing the name of a card did not return that card.** "burns" gave the
+  electrical-injury card, which is tagged critical and merely mentions burns,
+  above the card actually titled "Burns". An exact title match now multiplies
+  the score; a title that starts with the query gets a smaller bonus.
+- **Two-letter words matched inside other words.** "no" hid inside "monoxide"
+  and "co" inside "record", quietly poisoning the ranking for "no power". Terms
+  of one or two characters now only count as whole words — which also made "co"
+  return the carbon monoxide playbook.
+- Doctrine cards could never outrank a playbook on a single common word, because
+  playbooks carry a 3× boost and ordinary cards 1×. "supplies" returned six
+  scenarios and no kit list. Cards the author tagged `priority` now sit at 2×,
+  between ordinary reference material and the critical cards.
 
 ## Next
 

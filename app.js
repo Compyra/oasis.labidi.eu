@@ -1492,7 +1492,13 @@
                     kind: ch.title, title: c.title, sub: c.lede || '', href: `#/c/${ch.id}/${c.id}`,
                     hay: (c.title + ' ' + body).toLowerCase(), titleHay: c.title.toLowerCase(),
                     keyHay: (c.keys || '').toLowerCase(),
-                    boost: c.tag === 'critical' ? 3 : 1,
+                    /* The author's own importance marking drives ranking:
+                       critical sits level with playbooks, priority above
+                       ordinary reference material. Without this a doctrine
+                       card can never outrank a playbook on a single common
+                       word, and "supplies" returned six scenarios and no kit
+                       list. */
+                    boost: c.tag === 'critical' ? 3 : c.tag === 'priority' ? 2 : 1,
                 });
             });
         });
@@ -1547,34 +1553,71 @@
         const wordRes = terms.map(t => {
             try { return new RegExp('\\b' + esc(t) + '\\b'); } catch (e) { return null; }
         });
+        /* One- and two-letter terms only count as whole words. As a substring,
+           "no" hides inside "monoxide" and "co" inside "record", which quietly
+           poisoned the ranking for queries like "no power". */
+        const shortTerm = terms.map(t => t.length <= 2);
+        const phrase = terms.join(' ');
 
-        const out = [];
-        for (const item of INDEX) {
-            let score = 0, all = true, allWholeWords = true;
+        /**
+         * Score one index entry.
+         *
+         * `strict` demands every term appear somewhere in the same entry. That
+         * is the right default for precision, but it means one unrecognised
+         * word blanks the whole page — "what should I buy" found nothing at
+         * all, because no single card contains all four words. So a failed
+         * strict pass falls back to a relaxed one that accepts partial matches
+         * and ranks by how much of the question was actually covered.
+         */
+        function scoreItem(item, strict) {
+            let total = 0, hits = 0, allWholeWords = true;
             for (let i = 0; i < terms.length; i++) {
-                const t = terms[i], re = wordRes[i];
+                const t = terms[i], re = wordRes[i], mustBeWhole = shortTerm[i];
+                const has = (hayStr) => {
+                    if (!hayStr || hayStr.indexOf(t) < 0) return null;
+                    const w = !!(re && re.test(hayStr));
+                    return (mustBeWhole && !w) ? null : w;
+                };
                 let s = 0, whole = false;
-                if (item.titleHay && item.titleHay.indexOf(t) >= 0) {
-                    const w = re && re.test(item.titleHay);
-                    s += w ? 15 : 6; whole = whole || w;
+                const inTitle = has(item.titleHay);
+                if (inTitle !== null) { s += inTitle ? 15 : 6; whole = whole || inTitle; }
+                const inKeys = has(item.keyHay);
+                if (inKeys !== null) { s += inKeys ? 10 : 3; whole = whole || inKeys; }
+                const inBody = has(item.hay);
+                if (inBody !== null) { s += inBody ? 4 : 1; whole = whole || inBody; }
+                if (!s) {
+                    if (strict) return 0;
+                    allWholeWords = false;
+                    continue;
                 }
-                if (item.keyHay && item.keyHay.indexOf(t) >= 0) {
-                    const w = re && re.test(item.keyHay);
-                    s += w ? 10 : 3; whole = whole || w;
-                }
-                if (item.hay.indexOf(t) >= 0) {
-                    const w = re && re.test(item.hay);
-                    s += w ? 4 : 1; whole = whole || w;
-                }
-                if (!s) { all = false; break; }
                 if (!whole) allWholeWords = false;
-                score += s;
+                total += s; hits++;
             }
-            if (!all) continue;
-            if (allWholeWords) score *= 1.6;
-            out.push({ item, score: score * (item.boost || 1) });
+            if (!hits) return 0;
+            if (allWholeWords) total *= 1.6;
+            /* Coverage weighting: matching 3 of 4 words must beat matching 1
+               of 4, however often that one word happens to appear. */
+            if (!strict) total *= hits / terms.length;
+            /* If the user typed the name of the thing, give them the thing.
+               Without this, "burns" returned the electrical-injury card —
+               which is tagged critical and merely mentions burns — above the
+               card actually titled "Burns". */
+            if (item.titleHay === phrase) total *= 3;
+            else if (item.titleHay && item.titleHay.indexOf(phrase) === 0) total *= 1.5;
+            return total * (item.boost || 1);
         }
-        return out.sort((a, b) => b.score - a.score).slice(0, 50).map(x => x.item);
+
+        const run = strict => {
+            const out = [];
+            for (const item of INDEX) {
+                const s = scoreItem(item, strict);
+                if (s > 0) out.push({ item, score: s });
+            }
+            return out.sort((a, b) => b.score - a.score).slice(0, 50).map(x => x.item);
+        };
+
+        const exact = run(true);
+        return exact.length ? exact : run(false);
     }
 
     function highlight(text, terms) {
