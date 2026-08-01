@@ -1549,6 +1549,18 @@ mark {
         min-height: 1.2em;
     }
 
+    /* Attribution, foot of the card. Quiet, but it should not be mistaken
+       for one of the medical lines above it. */
+    .print-card .card-credit {
+        margin-top: 10px;
+        padding-top: 6px;
+        border-top: 1px solid #bbb;
+        text-align: right;
+        font-size: 8.5pt;
+        letter-spacing: .04em;
+        font-style: italic;
+    }
+
     body {
         background: #fff;
         font-size: 10.5pt;

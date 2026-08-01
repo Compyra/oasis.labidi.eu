@@ -1020,6 +1020,7 @@
 
     const CARD_FIELDS = [
         { k: 'name', label: 'Full name', ph: '' },
+        { k: 'callsign', label: 'Call sign', ph: 'What you are called on air, or any handle you want on the card' },
         { k: 'dob', label: 'Date of birth', ph: '' },
         { k: 'blood', label: 'Blood group', ph: 'e.g. O+' },
         { k: 'allergies', label: 'Allergies', ph: 'Drug, food, insect — or "none known"', big: true },
@@ -1034,6 +1035,15 @@
         { k: 'radio', label: 'Radio plan', ph: 'Channel or frequency, and the times you listen', big: true },
         { k: 'notes', label: 'Other', ph: 'Insurance numbers, doctor, vet, anything you would want on paper', big: true },
     ];
+
+    /**
+     * The line printed at the foot of the card. The call sign is optional, so
+     * an empty one must not leave a dangling "by" on the paper.
+     */
+    function cardCredit(callsign) {
+        const cs = (callsign || '').trim();
+        return cs ? `created @labidi.eu by ${cs}` : 'created @labidi.eu';
+    }
 
     function pageCard() {
         const frag = document.createDocumentFragment();
@@ -1054,8 +1064,12 @@
             el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, '🖨 Print the card'),
             el('button', {
                 class: 'btn ghost', type: 'button', onclick: () => {
+                    /* Read fresh: `data` was captured when the page rendered,
+                       so anything typed since would be missing from the file. */
+                    const d = store.get('card', {});
                     const lines = ['O.A.S.I.S. EMERGENCY CARD', ''];
-                    CARD_FIELDS.forEach(f => lines.push(f.label + ': ' + (data[f.k] || '')));
+                    CARD_FIELDS.forEach(f => lines.push(f.label + ': ' + (d[f.k] || '')));
+                    lines.push('', cardCredit(d.callsign));
                     downloadBlob(lines.join('\n'), 'emergency-card.txt', 'text/plain');
                 },
             }, '⭳ Export as text'),
@@ -1084,6 +1098,10 @@
                 store.set('card', d);
                 const out = document.getElementById('cardline-' + f.k);
                 if (out) out.textContent = input.value || '—';
+                if (f.k === 'callsign') {
+                    const credit = document.getElementById('cardCredit');
+                    if (credit) credit.textContent = cardCredit(input.value);
+                }
             });
             wrap.appendChild(input);
             fields.appendChild(wrap);
@@ -1106,6 +1124,10 @@
             ? `Home / last known position: ${fix.lat.toFixed(5)}, ${fix.lon.toFixed(5)} (WGS84) · ${window.GEO.toMGRS(fix.lat, fix.lon, 4) || ''}`
             : 'No position stored on this device.' }));
         sheet.appendChild(el('p', { class: 'note', text: 'Emergency numbers: 112 across the EU and much of the world · 911 in North America · 999 in the UK and Ireland · 000 in Australia. 112 reaches any available network, not only your own operator.' }));
+        sheet.appendChild(el('p', {
+            class: 'note card-credit', id: 'cardCredit',
+            text: cardCredit(data.callsign),
+        }));
         frag.appendChild(sheet);
 
         frag.appendChild(el('p', {
